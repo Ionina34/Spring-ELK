@@ -1,11 +1,20 @@
+# docker exec -it elasticsearch bin/elasticsearch-create-enrollment-token -s kibana - сгенерировать
+# токен
+# docker exec -it elasticsearch bin/elasticsearch-reset-password -u elastic -s - сбросить пароль
+# docker exec -it elasticsearch bin/elasticsearch-users useradd kibana_system_user -p kibanapas
+#s -r kibana_system
+
 version: '3.7'
 services:
   elasticsearch:
     image: elastic/elasticsearch:8.10.0
+    volumes:
+      - ./configs/elasticsearch/config.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
     container_name: elasticsearch
     environment:
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true
+      ELASTIC_PASSWORD: "MyPw123"
+      discovery.type: single-node
+      bootstrap.memory_lock: true
     ulimits:
       memlock:
         soft: -1
@@ -20,7 +29,9 @@ services:
     container_name: logstash
     volumes:
       - ./logs:/logs
-      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./configs/logstash/config.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./configs/logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
+      - ./configs/logstash/pipelines/logstash.conf:/usr/share/logstash/config/pipelines/logstash.conf
     ports:
       - "5044:5044"
     networks:
@@ -28,6 +39,8 @@ services:
 
   kibana:
     image: kibana:8.10.1
+    volumes:
+      - ./configs/kibana/config.yml:/usr/share/kibana/config/kibana.yml:ro
     container_name: kibana
     ports:
       - "5601:5601"
